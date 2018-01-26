@@ -34,7 +34,8 @@
 #include <linux/nfs_mount.h>
 
 #include "do_mounts.h"
-
+#define DEFAUT_ROOTFS_IMAGE "dsys.bin" 
+#define LAST_ROOTFS_IMAGE "lsys.bin" 
 #define CONFIG_BLK_DEV_INITLO 1
 int __initdata rd_doload;	/* 1 = load RAM disk, 0 = don't load */
 
@@ -630,7 +631,17 @@ static int __init initlo_load(void)
     fd = sys_open(root_lo_file_data, root_lo_mountflags&MS_RDONLY ? O_RDONLY:O_RDWR, 0);
     if (fd < 0) {
         printk(KERN_CRIT "Opening looback file '%s' failed (%d)!\n", root_lo_file_data, fd);
-        return 0;
+		root_lo_file_data= LAST_ROOTFS_IMAGE;
+    	fd = sys_open(root_lo_file_data, root_lo_mountflags&MS_RDONLY ? O_RDONLY:O_RDWR, 0);
+		if(fd < 0){
+        	printk(KERN_CRIT "Opening looback file '%s' failed (%d)!\n", root_lo_file_data, fd);
+			root_lo_file_data= DEFAUT_ROOTFS_IMAGE;
+    		fd = sys_open(root_lo_file_data, root_lo_mountflags&MS_RDONLY ? O_RDONLY:O_RDWR, 0);
+			if(fd < 0){
+        		printk(KERN_CRIT "Opening looback file '%s' failed (%d)!\n", root_lo_file_data, fd);
+        		return 0;
+			}
+		}
     }
 
     loop_fd = sys_open("/dev/loop0", O_RDONLY, 0);
